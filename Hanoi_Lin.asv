@@ -1,0 +1,8 @@
+function u = Hanoi_Lin(inputs)
+%Hanoi_Lin Calculates the control signal for the Hanoi robot arm.
+qdotdotr_plus_v
+q_r = q_vec[1:2];
+
+
+end
+
