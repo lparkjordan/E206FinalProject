@@ -36,5 +36,7 @@ g_mat = [(m*(a + l) + mL*a)*g*c1 + (m*l + mL*a)*g*c12; ...
      (m*l + mL*a)*g*c12];
 c = b_mat*thetadot_r+B*thetadot_r+g_mat; 
 alpha = inv(M) * (tau - c);
+
+alpha
 end
 
