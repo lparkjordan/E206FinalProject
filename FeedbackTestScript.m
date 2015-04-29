@@ -1,9 +1,11 @@
 global mL
 global b
 global tf
+global epsilon
 mL = 0.1;
 b = 0.02;
 tf = 1;
+epsilon = 0.1;
 
  
 
