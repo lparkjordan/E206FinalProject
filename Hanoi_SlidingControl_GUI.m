@@ -109,10 +109,17 @@ function plotButton_Callback(hObject, eventdata, handles)
 global mL;
 global b;
 global tf;
+global epsilon;
+epsilon = 1;
 mL = str2double(get(handles.LoadMassEntry,'String'));
 b = str2double(get(handles.frictionEntry,'String'));
 tf = str2double(get(handles.moveTimeEntry,'String'));
-SC_Gain = str2double(get(handles.SC_GainEntry,'String'));
+U = str2double(get(handles.SC_GainEntry,'String'));
+assignin('base','U',U);
+G = [zeros(2,2);eye(2)];
+assignin('base','G',G);
+P = eye(4);
+assignin('base','P',P);
 
 % run sim
 [tout, ~, yout] = sim('FeedbackLinearizedArm.slx', tf*5);
