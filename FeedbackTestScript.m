@@ -5,8 +5,17 @@ mL = 0.1;
 b = 0.02;
 tf = 1;
 
+ 
+
 Kp = eye(2)*316;
 Kd = eye(2)*14;
+
+
+F = [zeros(2), eye(2); -Kp, -Kd];
+G = [zeros(2); eye(2)];
+P = lyap(F', eye(4));
+U = eye(2);
+
 [tout, ~, p] = sim('FeedbackLinearizedArm',5);
 
 figure(1)
