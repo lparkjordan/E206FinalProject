@@ -12,8 +12,10 @@ b_real = 0.02;
 m = 0.25; %link masses, kg
 if massGrabbed
     mL_local = mL; %load mass, kg
+    mL_actual = 0.1;
 else
     mL_local = 0;
+    mL_actual = 0;
 end
 a = 0.2; %link lengths, m
 % Iz = 0.01; %link inertias, kgm^2
@@ -34,17 +36,23 @@ s2 = sin(q(2));
 Mhat = [m*(a^2 + 2*l^2 + 2*a*l*c2) + 2*Iz + 2*mL_local*a^2*(1 + c2), m*l*(l + a*c2)+ Iz + mL_local*a^2*(1 + c2); ...
      m*l*(l + a*c2) + Iz + mL_local*a^2*(1 + c2), m*l^2 + Iz + mL_local*a^2];
 
- Mreal = [m*(a^2 + 2*l^2 + 2*a*l*c2) + 2*Iz_real + 2*mL_local*a^2*(1 + c2), m*l*(l + a*c2)+ Iz_real + mL_local*a^2*(1 + c2); ...
-     m*l*(l + a*c2) + Iz_real + mL_local*a^2*(1 + c2), m*l^2 + Iz_real + mL_local*a^2];
+ Mreal = [m*(a^2 + 2*l^2 + 2*a*l*c2) + 2*Iz_real + 2*mL_actual*a^2*(1 + c2), m*l*(l + a*c2)+ Iz_real + mL_actual*a^2*(1 + c2); ...
+     m*l*(l + a*c2) + Iz_real + mL_actual*a^2*(1 + c2), m*l^2 + Iz_real + mL_actual*a^2];
  
-b_mat = [-2*(m*a*l + mL_local*a^2)*s2*qdot(2), -(m*a*l + mL_local*a^2)*s2*qdot(2); ...
+b_mat_hat = [-2*(m*a*l + mL_local*a^2)*s2*qdot(2), -(m*a*l + mL_local*a^2)*s2*qdot(2); ...
          (m*a*l + mL_local*a^2)*s2*qdot(1), 0];
+     
+b_mat_real = [-2*(m*a*l + mL_actual*a^2)*s2*qdot(2), -(m*a*l + mL_actual*a^2)*s2*qdot(2); ...
+         (m*a*l + mL_actual*a^2)*s2*qdot(1), 0];
 Bhat = [b 0; 0 b];
 Breal = [b_real 0; 0 b_real];
-g_mat = [(m*(a + l) + mL_local*a)*g*c1 + (m*l + mL_local*a)*g*c12; ...
+g_mat_hat = [(m*(a + l) + mL_local*a)*g*c1 + (m*l + mL_local*a)*g*c12; ...
      (m*l + mL_local*a)*g*c12];
-c_hat = b_mat*qdot+Bhat*qdot+g_mat; 
-c_real = b_mat*qdot+Breal*qdot+g_mat; 
+g_mat_real = [(m*(a + l) + mL_actual*a)*g*c1 + (m*l + mL_actual*a)*g*c12; ...
+     (m*l + mL_actual*a)*g*c12];
+ 
+c_hat = b_mat_hat*qdot+Bhat*qdot+g_mat_hat; 
+c_real = b_mat_real*qdot+Breal*qdot+g_mat_real; 
 % u = M*qdotdot_r_plus_v + c;
 eta = (eye(2)-Mreal\Mhat)*qdotdot_r_plus_v+Mreal\(c_real-c_hat);
 end

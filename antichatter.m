@@ -1,11 +1,11 @@
-function w = antichatter( u )
+function signS = antichatter( s )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 global epsilon;
-if norm(u) >= epsilon
-    w = u + u./norm(u);
+if norm(s) >= epsilon
+    signS = s./norm(s);
 else
-    w = u + u./epsilon;
+    signS = s./epsilon;
 end
 
 end
