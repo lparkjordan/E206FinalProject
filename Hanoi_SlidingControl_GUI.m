@@ -22,7 +22,7 @@ function varargout = Hanoi_SlidingControl_GUI(varargin)
 
 % Edit the above text to modify the response to help Hanoi_SlidingControl_GUI
 
-% Last Modified by GUIDE v2.5 07-May-2015 22:36:11
+% Last Modified by GUIDE v2.5 07-May-2015 23:36:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -84,10 +84,10 @@ ylabel('Veritcal Position (cm)');
 axis([-5 35 -15 25]);
 
 axes(handles.angleAxes)
-title('Hanoi Arm Angles')
+title('Eta')
 xlabel('Time (s)')
-ylabel('Angle (degrees)')
-axis([0 5 -180 180]);
+ylabel('Eta')
+% axis([0 5 -180 180]);
 
 axes(handles.torqueAxes)
 title('Total Torque on Each Arm Joint')
@@ -152,12 +152,16 @@ p = yout(:,1:2);
 theta = yout(:,3:4);
 Tau = yout(:,5:6);
 pgoal = yout(:,7:8);
-
+eta = yout(:,9:10);
+etaNorm = sqrt(eta(:,1).^2 + eta(:,2).^2);
+maxEta = max(etaNorm);
+assignin('base','eta',eta);
+assignin('base','maxEta',maxEta);
 % assignin('base','p',p);
 % assignin('base','pgoal',pgoal);
 % error = norm(p-pgoal);
 pdiff = p - pgoal;
-error = sqrt(pdiff(:,1).^2 + pdiff(:,2).^2);
+error = 10*sqrt(pdiff(:,1).^2 + pdiff(:,2).^2); % in mm
 % assignin('base','error',error);
 errorsquare = error.^2;
 dt = 0.01;
@@ -168,14 +172,16 @@ sumTau2 = sum(Tau(:,2).^2)*dt;
 
 moves24 = find((tf<=tout & tout<2*tf) | (3*tf<=tout & tout<4*tf));
 % errors24 = error(moves24);
-errorsX24 = abs(pdiff(moves24,1));
+errorsX24 = 10*abs(pdiff(moves24,1)); % in mm
 maxdeviation24 = max(errorsX24);
+
+set(handles.minUDisplay,'String', num2str(maxEta,3));
 
 set(handles.completionTimeDisplay,'String', num2str(tf*5));
 set(handles.ISerrorDisplay,'String', num2str(sumErrorSquare));
 set(handles.IStorque1Display,'String', num2str(sumTau1));
 set(handles.IStorque2Display,'String', num2str(sumTau2));
-set(handles.deviationDisplay,'String', num2str(maxdeviation24.*10));
+set(handles.deviationDisplay,'String', num2str(maxdeviation24));
 set(handles.plotButton, 'Enable', 'off');
 % plot stuff
 axes(handles.errorAxes)
@@ -188,12 +194,26 @@ xlabel('Time (s)')
 ylabel('Error (mm)')
 legend('X errors','Y errors');
 
+% axes(handles.angleAxes)
+% plot(tout,theta*360/(2*pi));
+% title('Hanoi Arm Angles')
+% xlabel('Time (s)')
+% ylabel('Angle (degrees)')
+% legend('Joint 1 angle', 'Joint 2 angle');
+
 axes(handles.angleAxes)
-plot(tout,theta*360/(2*pi));
-title('Hanoi Arm Angles')
+cla;
+hold all;
+plot(tout,eta(:,1));
+plot(tout,eta(:,2));
+plot(tout,etaNorm,'LineWidth', 2)
+title('Eta')
 xlabel('Time (s)')
-ylabel('Angle (degrees)')
-legend('Joint 1 angle', 'Joint 2 angle');
+ylabel('Eta')
+legend('Eta1', 'Eta2','Eta Norm');
+axis auto
+ylims = ylim;
+ylim([ylims(1) ylims(2)*1.3]);
 
 axes(handles.torqueAxes)
 plot(tout,Tau);
@@ -593,3 +613,26 @@ set(handles.linkInertiaEntry,'String', '0.01');
 set(handles.moveTimeEntry,'String', '1');
 set(handles.SC_GainEntry,'String', '10');
 set(handles.epsilonEntry,'String', '0.10');
+
+
+
+function minUDisplay_Callback(hObject, eventdata, handles)
+% hObject    handle to minUDisplay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of minUDisplay as text
+%        str2double(get(hObject,'String')) returns contents of minUDisplay as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function minUDisplay_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to minUDisplay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
