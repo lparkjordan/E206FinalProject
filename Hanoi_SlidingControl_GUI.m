@@ -22,7 +22,7 @@ function varargout = Hanoi_SlidingControl_GUI(varargin)
 
 % Edit the above text to modify the response to help Hanoi_SlidingControl_GUI
 
-% Last Modified by GUIDE v2.5 07-May-2015 20:45:18
+% Last Modified by GUIDE v2.5 07-May-2015 22:20:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -66,6 +66,14 @@ mL = 0.1;
 tf = 1;
 
 % Set up axes
+axes(handles.errorAxes)
+cla;
+% plot(tout,error);
+title('Hanoi Position Errors')
+xlabel('Time (s)')
+ylabel('Error (meters)')
+
+
 axes(handles.trajAxes);
 title('Trajectory of Hanoi arm')
 xlabel('Horizontal Position (cm)');
@@ -106,6 +114,8 @@ function plotButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+assignin('base','stop',0);
+
 % set values (ask whether they go to traj generator or arm as well)
 global mL;
 global b;
@@ -124,8 +134,10 @@ assignin('base','G',G);
 P = eye(4);
 assignin('base','P',P);
 
-Kp = eye(2)*316;
-Kd = eye(2)*14;
+% Kp = eye(2)*316;
+% Kd = eye(2)*14;
+Kp = eye(2)*2236.1;
+Kd = eye(2)*74;
 assignin('base','Kp',Kp);
 assignin('base','Kd',Kd);
 
@@ -137,10 +149,41 @@ theta = yout(:,3:4);
 Tau = yout(:,5:6);
 pgoal = yout(:,7:8);
 
-error = norm(p-pgoal);
+% assignin('base','p',p);
+% assignin('base','pgoal',pgoal);
+% error = norm(p-pgoal);
+pdiff = p - pgoal;
+error = sqrt(pdiff(:,1).^2 + pdiff(:,2).^2);
+% assignin('base','error',error);
+errorsquare = error.^2;
+dt = 0.01;
+sumErrorSquare = sum(errorsquare*dt);
 
+sumTau1 = sum(Tau(:,1).^2)*dt;
+sumTau2 = sum(Tau(:,2).^2)*dt;
+
+moves24 = find((tf<=tout & tout<2*tf) | (3*tf<=tout & tout<4*tf));
+% errors24 = error(moves24);
+errorsX24 = abs(pdiff(moves24,1));
+maxdeviation24 = max(errorsX24);
+
+set(handles.completionTimeDisplay,'String', num2str(tf*5));
+set(handles.ISerrorDisplay,'String', num2str(sumErrorSquare));
+set(handles.IStorque1Display,'String', num2str(sumTau1));
+set(handles.IStorque2Display,'String', num2str(sumTau2));
+set(handles.deviationDisplay,'String', num2str(maxdeviation24.*10));
 set(handles.plotButton, 'Enable', 'off');
 % plot stuff
+axes(handles.errorAxes)
+cla;
+hold all
+plot(tout,pdiff(:,1).*10);
+plot(tout,pdiff(:,2).*10);
+title('Hanoi Position Errors')
+xlabel('Time (s)')
+ylabel('Error (mm)')
+legend('X errors','Y errors');
+
 axes(handles.angleAxes)
 plot(tout,theta*360/(2*pi));
 title('Hanoi Arm Angles')
@@ -182,7 +225,8 @@ for i = [2:skip:length(p(:,1)),length(p(:,1))]
     delete(link2)
 %     cla(handles.axes_SimPlot);    
     hold all;
-    plot(p(i-skip:i,1),p(i-skip:i,2),'o-', 'Color', 'Blue', 'MarkerSize',3);
+    plot(p(i-skip:i,1),p(i-skip:i,2),'o-', 'Color', 'Blue', 'MarkerSize',3);    
+    plot(pgoal(i-skip:i,1),pgoal(i-skip:i,2),'o-', 'Color', 'Green', 'MarkerSize',1);
     link1 = line([0 a*cos(theta(i,1))], [0 a*sin(theta(i,1))],'LineWidth',2, 'Color','Red');
     link2 = line([a*cos(theta(i,1)) a*cos(theta(i,1)) + a*cos(theta(i,1)+theta(i,2))], ...
                  [a*sin(theta(i,1)) a*sin(theta(i,1)) + a*sin(theta(i,1)+theta(i,2))],'LineWidth',2,'Color','Red');
@@ -195,6 +239,11 @@ for i = [2:skip:length(p(:,1)),length(p(:,1))]
     ylabel('Veritcal Position (cm)');
     drawnow;
     
+    stop = evalin('base','stop');
+    if (stop == 1)
+        set(handles.plotButton, 'Enable', 'on');
+        return;
+    end    
     while (toc < t)
         %do nothing
     end
@@ -341,7 +390,7 @@ function SC_GainEntry_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of SC_GainEntry as a double
 newVal = str2double(get(hObject,'String'));
 if(isnan(newVal))
-     set(hObject,'String', '0.1');
+     set(hObject,'String', '10');
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -355,3 +404,149 @@ function SC_GainEntry_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
+function edit8_Callback(hObject, eventdata, handles)
+% hObject    handle to edit8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit8 as text
+%        str2double(get(hObject,'String')) returns contents of edit8 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit8_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function completionTimeDisplay_Callback(hObject, eventdata, handles)
+% hObject    handle to completionTimeDisplay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of completionTimeDisplay as text
+%        str2double(get(hObject,'String')) returns contents of completionTimeDisplay as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function completionTimeDisplay_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to completionTimeDisplay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function ISerrorDisplay_Callback(hObject, eventdata, handles)
+% hObject    handle to ISerrorDisplay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ISerrorDisplay as text
+%        str2double(get(hObject,'String')) returns contents of ISerrorDisplay as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function ISerrorDisplay_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ISerrorDisplay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function deviationDisplay_Callback(hObject, eventdata, handles)
+% hObject    handle to deviationDisplay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of deviationDisplay as text
+%        str2double(get(hObject,'String')) returns contents of deviationDisplay as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function deviationDisplay_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to deviationDisplay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function IStorque1Display_Callback(hObject, eventdata, handles)
+% hObject    handle to IStorque1Display (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of IStorque1Display as text
+%        str2double(get(hObject,'String')) returns contents of IStorque1Display as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function IStorque1Display_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to IStorque1Display (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function IStorque2Display_Callback(hObject, eventdata, handles)
+% hObject    handle to IStorque2Display (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of IStorque2Display as text
+%        str2double(get(hObject,'String')) returns contents of IStorque2Display as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function IStorque2Display_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to IStorque2Display (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in stopButton.
+function stopButton_Callback(hObject, eventdata, handles)
+% hObject    handle to stopButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+assignin('base','stop',1);
