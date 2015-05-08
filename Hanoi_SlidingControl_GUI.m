@@ -22,7 +22,7 @@ function varargout = Hanoi_SlidingControl_GUI(varargin)
 
 % Edit the above text to modify the response to help Hanoi_SlidingControl_GUI
 
-% Last Modified by GUIDE v2.5 29-Apr-2015 15:33:54
+% Last Modified by GUIDE v2.5 07-May-2015 20:45:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -64,6 +64,7 @@ global tf;
 b = 0.02;
 mL = 0.1;
 tf = 1;
+
 % Set up axes
 axes(handles.trajAxes);
 title('Trajectory of Hanoi arm')
@@ -110,7 +111,9 @@ global mL;
 global b;
 global tf;
 global epsilon;
-epsilon = 1;
+% epsilon = 1;
+epsilon = str2double(get(handles.epsilonEntry,'String'));
+
 mL = str2double(get(handles.LoadMassEntry,'String'));
 b = str2double(get(handles.frictionEntry,'String'));
 tf = str2double(get(handles.moveTimeEntry,'String'));
@@ -121,12 +124,20 @@ assignin('base','G',G);
 P = eye(4);
 assignin('base','P',P);
 
+Kp = eye(2)*316;
+Kd = eye(2)*14;
+assignin('base','Kp',Kp);
+assignin('base','Kd',Kd);
+
 % run sim
 [tout, ~, yout] = sim('FeedbackLinearizedArm.slx', tf*5);
 assignin('base','yout','yout')
 p = yout(:,1:2);
 theta = yout(:,3:4);
 Tau = yout(:,5:6);
+pgoal = yout(:,7:8);
+
+error = norm(p-pgoal);
 
 set(handles.plotButton, 'Enable', 'off');
 % plot stuff
@@ -295,18 +306,21 @@ end
 
 
 
-function edit5_Callback(hObject, eventdata, handles)
-% hObject    handle to edit5 (see GCBO)
+function epsilonEntry_Callback(hObject, eventdata, handles)
+% hObject    handle to epsilonEntry (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit5 as text
-%        str2double(get(hObject,'String')) returns contents of edit5 as a double
-
+% Hints: get(hObject,'String') returns contents of epsilonEntry as text
+%        str2double(get(hObject,'String')) returns contents of epsilonEntry as a double
+newVal = str2double(get(hObject,'String'));
+if(isnan(newVal))
+     set(hObject,'String', '0.1');
+end 
 
 % --- Executes during object creation, after setting all properties.
-function edit5_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit5 (see GCBO)
+function epsilonEntry_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to epsilonEntry (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
