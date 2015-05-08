@@ -138,10 +138,10 @@ assignin('base','G',G);
 P = eye(4);
 assignin('base','P',P);
 
-Kp = eye(2)*447;
-Kd = eye(2)*43.5;
-% Kp = eye(2)*1414.2;
-% Kd = eye(2)*61.9;
+% Kp = eye(2)*447;
+% Kd = eye(2)*43.5;
+Kp = eye(2)*1414.2;
+Kd = eye(2)*61.9;
 % Kp = eye(2)*100;
 % Kd = eye(2)*101;
 assignin('base','Kp',Kp);
