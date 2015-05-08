@@ -22,7 +22,7 @@ function varargout = Hanoi_SlidingControl_GUI(varargin)
 
 % Edit the above text to modify the response to help Hanoi_SlidingControl_GUI
 
-% Last Modified by GUIDE v2.5 07-May-2015 22:20:38
+% Last Modified by GUIDE v2.5 07-May-2015 22:36:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,9 +61,11 @@ guidata(hObject, handles);
 global b;
 global mL;
 global tf;
+global Iz;
 b = 0.02;
 mL = 0.1;
 tf = 1;
+Iz = 0.01;
 
 % Set up axes
 axes(handles.errorAxes)
@@ -120,6 +122,7 @@ assignin('base','stop',0);
 global mL;
 global b;
 global tf;
+global Iz;
 global epsilon;
 % epsilon = 1;
 epsilon = str2double(get(handles.epsilonEntry,'String'));
@@ -127,6 +130,7 @@ epsilon = str2double(get(handles.epsilonEntry,'String'));
 mL = str2double(get(handles.LoadMassEntry,'String'));
 b = str2double(get(handles.frictionEntry,'String'));
 tf = str2double(get(handles.moveTimeEntry,'String'));
+Iz = str2double(get(handles.linkInertiaEntry,'String'));
 U = str2double(get(handles.SC_GainEntry,'String'));
 assignin('base','U',U);
 G = [zeros(2,2);eye(2)];
@@ -550,3 +554,42 @@ function stopButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 assignin('base','stop',1);
+
+
+
+function linkInertiaEntry_Callback(hObject, eventdata, handles)
+% hObject    handle to linkInertiaEntry (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of linkInertiaEntry as text
+%        str2double(get(hObject,'String')) returns contents of linkInertiaEntry as a double
+newVal = str2double(get(hObject,'String'));
+if(isnan(newVal))
+     set(hObject,'String', '0.01');
+end
+
+% --- Executes during object creation, after setting all properties.
+function linkInertiaEntry_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to linkInertiaEntry (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in restoreDefaultsButton.
+function restoreDefaultsButton_Callback(hObject, eventdata, handles)
+% hObject    handle to restoreDefaultsButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.LoadMassEntry,'String', '0.1');
+set(handles.frictionEntry,'String', '0.02');
+set(handles.linkInertiaEntry,'String', '0.01');
+set(handles.moveTimeEntry,'String', '1');
+set(handles.SC_GainEntry,'String', '10');
+set(handles.epsilonEntry,'String', '0.10');

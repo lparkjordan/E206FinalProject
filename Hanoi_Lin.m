@@ -5,6 +5,7 @@ function u = Hanoi_Lin(inputs)
 global massGrabbed;
 global mL;
 global b;
+global Iz;
 % Parameters
 m = 0.25; %link masses, kg
 if massGrabbed
@@ -13,7 +14,7 @@ else
     mL_local = 0;
 end
 a = 0.2; %link lengths, m
-Iz = 0.01; %link inertias, kgm^2
+% Iz = 0.01; %link inertias, kgm^2
 l = a/2; %Center of mass from joints
 g = 9.81; % acceleration due to gravity, m/s^2
 
